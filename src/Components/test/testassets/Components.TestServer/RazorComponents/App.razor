@@ -88,6 +88,11 @@
                         }
                     },
                 },
+                circuit: {
+                    reconnectionOptions: {
+                        retryIntervalMilliseconds: 5000,
+                    },
+                },
             }).then(() => appendHiddenParagraph('blazor-started'));
         }
 
