@@ -134,6 +134,7 @@
       }
     }
   },
+  "components": { },
   "tags": [
     {
       "name": "users"

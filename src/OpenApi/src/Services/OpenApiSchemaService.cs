@@ -7,35 +7,39 @@ using System.IO.Pipelines;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization.Metadata;
 using JsonSchemaMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 
 namespace Microsoft.AspNetCore.OpenApi;
 
 /// <summary>
-/// Supports managing elements that belong in the "components" section of
-/// an OpenAPI document. In particular, this is the API that is used to
-/// interact with the JSON schemas that are managed by a given OpenAPI document.
+/// Supports managing the JSON schemas associated with types
+/// reference in a given OpenAPI document.
 /// </summary>
-internal sealed class OpenApiComponentService(IOptions<JsonOptions> jsonOptions)
+internal sealed class OpenApiSchemaService(IOptions<JsonOptions> jsonOptions)
 {
     private readonly ConcurrentDictionary<(Type, ParameterInfo?), JsonObject> _schemas = new()
     {
         // Pre-populate OpenAPI schemas for well-defined types in ASP.NET Core.
-        [(typeof(IFormFile), null)] = new JsonObject { ["type"] = "string", ["format"] = "binary" },
+        [(typeof(IFormFile), null)] = new JsonObject { ["type"] = "string", ["format"] = "binary", [OpenApiConstants.SchemaId] = nameof(IFormFile) },
         [(typeof(IFormFileCollection), null)] = new JsonObject
         {
             ["type"] = "array",
-            ["items"] = new JsonObject { ["type"] = "string", ["format"] = "binary" }
+            ["items"] = new JsonObject { ["type"] = "string", ["format"] = "binary" },
+            [OpenApiConstants.SchemaId] = nameof(IFormFileCollection)
         },
-        [(typeof(Stream), null)] = new JsonObject { ["type"] = "string", ["format"] = "binary" },
-        [(typeof(PipeReader), null)] = new JsonObject { ["type"] = "string", ["format"] = "binary" },
+        [(typeof(Stream), null)] = new JsonObject { ["type"] = "string", ["format"] = "binary", [OpenApiConstants.SchemaId] = nameof(Stream) },
+        [(typeof(PipeReader), null)] = new JsonObject { ["type"] = "string", ["format"] = "binary", [OpenApiConstants.SchemaId] = nameof(PipeReader) },
     };
+
+    private readonly ConcurrentDictionary<string, OpenApiSchema> _schemasByRef = new();
 
     private readonly JsonSerializerOptions _jsonSerializerOptions = jsonOptions.Value.SerializerOptions;
     private readonly JsonSchemaMapperConfiguration _configuration = new()
@@ -66,7 +70,10 @@ internal sealed class OpenApiComponentService(IOptions<JsonOptions> jsonOptions)
             {
                 schema.ApplyValidationAttributes(validationAttributes);
             }
-
+            if (context.TypeInfo.Kind == JsonTypeInfoKind.Object && context.TypeInfo.PolymorphismOptions == null)
+            {
+                schema[OpenApiConstants.SchemaId] = context.TypeInfo.Type.GetSchemaReferenceId();
+            }
         }
     };
 
@@ -81,8 +88,22 @@ internal sealed class OpenApiComponentService(IOptions<JsonOptions> jsonOptions)
             schemaAsJsonObject.ApplyParameterInfo(parameterDescription);
         }
         var deserializedSchema = JsonSerializer.Deserialize(schemaAsJsonObject, OpenApiJsonSchemaContext.Default.OpenApiJsonSchema);
-        return deserializedSchema != null ? deserializedSchema.Schema : new OpenApiSchema();
+        if (deserializedSchema is not null)
+        {
+            var schemaId = deserializedSchema.Schema.Extensions.TryGetValue(OpenApiConstants.SchemaId, out var schemaIdExtension) &&
+                           schemaIdExtension is OpenApiString { Value: string schemaIdValue }
+                ? schemaIdValue
+                : null;
+            if (schemaId is not null)
+            {
+                _schemasByRef.AddOrUpdate(schemaId, _ => deserializedSchema.Schema, (_, _) => deserializedSchema.Schema);
+            }
+            return deserializedSchema.Schema;
+        }
+        return new OpenApiSchema();
     }
+
+    internal ConcurrentDictionary<string, OpenApiSchema> GetSchemasByRef() => _schemasByRef;
 
     private JsonObject CreateSchema((Type Type, ParameterInfo? ParameterInfo) key)
         => key.ParameterInfo is not null

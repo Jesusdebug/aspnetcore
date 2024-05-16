@@ -26,9 +26,10 @@ public partial class OpenApiComponentServiceTests : OpenApiDocumentServiceTestBa
             Assert.NotNull(requestBody);
             var content = Assert.Single(requestBody.Content);
             Assert.Equal("application/json", content.Key);
-            Assert.NotNull(content.Value.Schema);
-            Assert.Equal("object", content.Value.Schema.Type);
-            Assert.Collection(content.Value.Schema.Properties,
+            var schema = content.Value.Schema.GetReferencedSchema(document);
+            Assert.NotNull(schema);
+            Assert.Equal("object", schema.Type);
+            Assert.Collection(schema.Properties,
                 property =>
                 {
                     Assert.Equal("id", property.Key);
@@ -73,8 +74,11 @@ public partial class OpenApiComponentServiceTests : OpenApiDocumentServiceTestBa
                 var operation = document.Paths[$"/{path}"].Operations[OperationType.Post];
                 var requestBody = operation.RequestBody;
 
-                Assert.Equal("string", requestBody.Content["application/octet-stream"].Schema.Type);
-                Assert.Equal("binary", requestBody.Content["application/octet-stream"].Schema.Format);
+                var schema = requestBody.Content["application/octet-stream"].Schema.GetReferencedSchema(document);
+                Assert.NotNull(schema);
+
+                Assert.Equal("string", schema.Type);
+                Assert.Equal("binary", schema.Format);
             }
         });
     }
@@ -93,13 +97,17 @@ public partial class OpenApiComponentServiceTests : OpenApiDocumentServiceTestBa
         {
             var operation = document.Paths[$"/proposal"].Operations[OperationType.Post];
             var requestBody = operation.RequestBody;
-            var schema = requestBody.Content["application/json"].Schema;
+            var schema = requestBody.Content["application/json"].Schema.GetReferencedSchema(document);
+            Assert.NotNull(schema);
             Assert.Collection(schema.Properties,
-                property => {
+                static property =>
+                {
                     Assert.Equal("proposalElement", property.Key);
-                    // Todo: Assert that refs are used correctly.
+                    Assert.NotNull(property.Value.Reference);
+                    Assert.Equal("#\\components\\schemas\\Proposal", property.Value.Reference.Id);
                 },
-                property => {
+                property =>
+                {
                     Assert.Equal("stream", property.Key);
                     Assert.Equal("string", property.Value.Type);
                     Assert.Equal("binary", property.Value.Format);
@@ -182,9 +190,11 @@ public partial class OpenApiComponentServiceTests : OpenApiDocumentServiceTestBa
             Assert.NotNull(operation.RequestBody);
             var requestBody = operation.RequestBody.Content;
             Assert.True(requestBody.TryGetValue("application/json", out var mediaType));
-            Assert.Equal("object", mediaType.Schema.Type);
-            Assert.Empty(mediaType.Schema.AnyOf);
-            Assert.Collection(mediaType.Schema.Properties,
+            var schema = mediaType.Schema.GetReferencedSchema(document);
+            Assert.NotNull(schema);
+            Assert.Equal("object", schema.Type);
+            Assert.Empty(schema.AnyOf);
+            Assert.Collection(schema.Properties,
                 property =>
                 {
                     Assert.Equal("length", property.Key);

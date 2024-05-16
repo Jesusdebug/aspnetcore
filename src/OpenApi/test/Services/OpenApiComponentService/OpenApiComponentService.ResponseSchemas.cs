@@ -63,8 +63,10 @@ public partial class OpenApiComponentServiceTests : OpenApiDocumentServiceTestBa
             var responses = Assert.Single(operation.Responses);
             var response = responses.Value;
             Assert.True(response.Content.TryGetValue("application/json", out var mediaType));
-            Assert.Equal("object", mediaType.Schema.Type);
-            Assert.Collection(mediaType.Schema.Properties,
+            var schema = mediaType.Schema.GetReferencedSchema(document);
+            Assert.NotNull(schema);
+            Assert.Equal("object", schema.Type);
+            Assert.Collection(schema.Properties,
                 property =>
                 {
                     Assert.Equal("id", property.Key);
@@ -109,8 +111,10 @@ public partial class OpenApiComponentServiceTests : OpenApiDocumentServiceTestBa
             var responses = Assert.Single(operation.Responses);
             var response = responses.Value;
             Assert.True(response.Content.TryGetValue("application/json", out var mediaType));
-            Assert.Equal("object", mediaType.Schema.Type);
-            Assert.Collection(mediaType.Schema.Properties,
+            var schema = mediaType.Schema.GetReferencedSchema(document);
+            Assert.NotNull(schema);
+            Assert.Equal("object", schema.Type);
+            Assert.Collection(schema.Properties,
                 property =>
                 {
                     Assert.Equal("id", property.Key);
@@ -152,8 +156,10 @@ public partial class OpenApiComponentServiceTests : OpenApiDocumentServiceTestBa
             var responses = Assert.Single(operation.Responses);
             var response = responses.Value;
             Assert.True(response.Content.TryGetValue("application/json", out var mediaType));
-            Assert.Equal("object", mediaType.Schema.Type);
-            Assert.Collection(mediaType.Schema.Properties,
+            var schema = mediaType.Schema.GetReferencedSchema(document);
+            Assert.NotNull(schema);
+            Assert.Equal("object", schema.Type);
+            Assert.Collection(schema.Properties,
                 property =>
                 {
                     Assert.Equal("dueDate", property.Key);
@@ -201,8 +207,10 @@ public partial class OpenApiComponentServiceTests : OpenApiDocumentServiceTestBa
             var responses = Assert.Single(operation.Responses);
             var response = responses.Value;
             Assert.True(response.Content.TryGetValue("application/json", out var mediaType));
-            Assert.Equal("object", mediaType.Schema.Type);
-            Assert.Collection(mediaType.Schema.Properties,
+            var schema = mediaType.Schema.GetReferencedSchema(document);
+            Assert.NotNull(schema);
+            Assert.Equal("object", schema.Type);
+            Assert.Collection(schema.Properties,
                 property =>
                 {
                     Assert.Equal("isSuccessful", property.Key);
@@ -266,9 +274,11 @@ public partial class OpenApiComponentServiceTests : OpenApiDocumentServiceTestBa
             var responses = Assert.Single(operation.Responses);
             var response = responses.Value;
             Assert.True(response.Content.TryGetValue("application/json", out var mediaType));
-            Assert.Equal("object", mediaType.Schema.Type);
-            Assert.Empty(mediaType.Schema.AnyOf);
-            Assert.Collection(mediaType.Schema.Properties,
+            var schema = mediaType.Schema.GetReferencedSchema(document);
+            Assert.NotNull(schema);
+            Assert.Equal("object", schema.Type);
+            Assert.Empty(schema.AnyOf);
+            Assert.Collection(schema.Properties,
                 property =>
                 {
                     Assert.Equal("length", property.Key);
@@ -305,8 +315,9 @@ public partial class OpenApiComponentServiceTests : OpenApiDocumentServiceTestBa
             var responses = Assert.Single(operation.Responses);
             var response = responses.Value;
             Assert.True(response.Content.TryGetValue("application/json", out var mediaType));
-            Assert.Equal("object", mediaType.Schema.Type);
-            Assert.Collection(mediaType.Schema.Properties,
+            var schema = mediaType.Schema.GetReferencedSchema(document);
+            Assert.Equal("object", schema.Type);
+            Assert.Collection(schema.Properties,
                 property =>
                 {
                     Assert.Equal("id", property.Key);

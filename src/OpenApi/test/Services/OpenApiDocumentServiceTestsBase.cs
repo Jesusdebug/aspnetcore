@@ -215,7 +215,7 @@ public abstract class OpenApiDocumentServiceTestBase
         public static TestServiceProvider Instance { get; } = new TestServiceProvider();
         private IKeyedServiceProvider _serviceProvider;
         internal OpenApiDocumentService TestDocumentService { get; set; }
-        internal OpenApiComponentService TestComponentService { get; set; } = new OpenApiComponentService(Options.Create(new Microsoft.AspNetCore.Http.Json.JsonOptions()));
+        internal OpenApiSchemaService TestComponentService { get; set; } = new OpenApiSchemaService(Options.Create(new Microsoft.AspNetCore.Http.Json.JsonOptions()));
 
         public void SetInternalServiceProvider(IServiceCollection serviceCollection)
         {
@@ -228,12 +228,12 @@ public abstract class OpenApiDocumentServiceTestBase
             {
                 return TestDocumentService;
             }
-            if (serviceType == typeof(OpenApiComponentService))
+            if (serviceType == typeof(OpenApiSchemaService))
             {
                 return TestComponentService;
             }
 
-            if (serviceType == typeof(OpenApiComponentService))
+            if (serviceType == typeof(OpenApiSchemaService))
             {
                 return TestComponentService;
             }
@@ -247,12 +247,12 @@ public abstract class OpenApiDocumentServiceTestBase
             {
                 return TestDocumentService;
             }
-            if (serviceType == typeof(OpenApiComponentService))
+            if (serviceType == typeof(OpenApiSchemaService))
             {
                 return TestComponentService;
             }
 
-            if (serviceType == typeof(OpenApiComponentService))
+            if (serviceType == typeof(OpenApiSchemaService))
             {
                 return TestComponentService;
             }

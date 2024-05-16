@@ -22,4 +22,5 @@ internal class OpenApiSchemaKeywords
     public const string MaximumKeyword = "maximum";
     public const string MinItemsKeyword = "minItems";
     public const string MaxItemsKeyword = "maxItems";
+    public const string ReferenceKeyword = "$ref";
 }

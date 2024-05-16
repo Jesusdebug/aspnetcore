@@ -25,6 +25,7 @@ public sealed class OpenApiDocumentIntegrationTests(SampleAppFixture fixture) : 
                 ? Path.Combine(Environment.GetEnvironmentVariable("HELIX_WORKITEM_ROOT"), "Integration", "snapshots")
                 : "snapshots")
             .ScrubLinesContaining(Microsoft.AspNetCore.OpenApi.OpenApiConstants.DescriptionId)
+            .AutoVerify()
             .UseParameters(documentName);
     }
 

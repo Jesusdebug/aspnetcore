@@ -29,7 +29,7 @@ internal sealed class OpenApiDocumentService(
     IServiceProvider serviceProvider)
 {
     private readonly OpenApiOptions _options = optionsMonitor.Get(documentName);
-    private readonly OpenApiComponentService _componentService = serviceProvider.GetRequiredKeyedService<OpenApiComponentService>(documentName);
+    private readonly OpenApiSchemaService _componentService = serviceProvider.GetRequiredKeyedService<OpenApiSchemaService>(documentName);
 
     private static readonly OpenApiEncoding _defaultFormEncoding = new OpenApiEncoding { Style = ParameterStyle.Form, Explode = true };
 
@@ -74,6 +74,9 @@ internal sealed class OpenApiDocumentService(
             var transformer = _options.DocumentTransformers[i];
             await transformer.TransformAsync(document, documentTransformerContext, cancellationToken);
         }
+
+        var schemaTransformer = new OpenApiComponentsSchemaTransformer();
+        await schemaTransformer.TransformAsync(document, documentTransformerContext, cancellationToken);
     }
 
     // Note: Internal for testing.

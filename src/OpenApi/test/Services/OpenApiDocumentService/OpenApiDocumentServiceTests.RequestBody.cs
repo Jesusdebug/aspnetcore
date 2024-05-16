@@ -4,6 +4,7 @@
 using System.IO.Pipelines;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.InternalTesting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
@@ -423,10 +424,11 @@ public partial class OpenApiDocumentServiceTests : OpenApiDocumentServiceTestBas
             // Same schema should be produced for both content-types
             foreach (var item in content.Values)
             {
-                Assert.NotNull(item.Schema);
-                Assert.Equal("object", item.Schema.Type);
-                Assert.NotNull(item.Schema.Properties);
-                Assert.Collection(item.Schema.Properties,
+                var schema = item.Schema.GetReferencedSchema(document);
+                Assert.NotNull(schema);
+                Assert.Equal("object", schema.Type);
+                Assert.NotNull(schema.Properties);
+                Assert.Collection(schema.Properties,
                     property =>
                     {
                         Assert.Equal("id", property.Key);
@@ -527,13 +529,14 @@ public partial class OpenApiDocumentServiceTests : OpenApiDocumentServiceTestBas
             // Same schema should be produced for both content-types
             foreach (var item in content.Values)
             {
+                var schema = item.Schema.GetReferencedSchema(document);
                 Assert.NotNull(item.Schema);
                 Assert.Equal("object", item.Schema.Type);
                 Assert.NotNull(item.Schema.AllOf);
                 Assert.Collection(item.Schema.AllOf,
                     allOfItem =>
                     {
-                        Assert.Collection(allOfItem.Properties, property =>
+                        Assert.Collection(allOfItem.GetReferencedSchema(document).Properties, property =>
                             {
                                 Assert.Equal("id", property.Key);
                                 Assert.Equal("integer", property.Value.Type);
@@ -557,7 +560,7 @@ public partial class OpenApiDocumentServiceTests : OpenApiDocumentServiceTestBas
                     },
                     allOfItem =>
                     {
-                        Assert.Collection(allOfItem.Properties,
+                        Assert.Collection(allOfItem.GetReferencedSchema(document).Properties,
                             property =>
                             {
                                 Assert.Equal("code", property.Key);
@@ -632,6 +635,7 @@ public partial class OpenApiDocumentServiceTests : OpenApiDocumentServiceTestBas
                             {
                                 Assert.Equal("Message", property.Key);
                                 Assert.Equal("string", property.Value.Type);
+
                             });
                     });
             }
@@ -695,9 +699,10 @@ public partial class OpenApiDocumentServiceTests : OpenApiDocumentServiceTestBas
             Assert.NotNull(operation.RequestBody.Content);
             var content = operation.RequestBody.Content;
             var item = Assert.Single(content.Values);
-            Assert.NotNull(item.Schema);
-            Assert.Equal("object", item.Schema.Type);
-            Assert.Collection(item.Schema.Properties,
+            var schema = item.Schema.GetReferencedSchema(document);
+            Assert.NotNull(schema);
+            Assert.Equal("object", schema.Type);
+            Assert.Collection(schema.Properties,
                 property =>
                 {
                     Assert.Equal("Name", property.Key);
@@ -874,7 +879,7 @@ public partial class OpenApiDocumentServiceTests : OpenApiDocumentServiceTestBas
                 Assert.Collection(item.Schema.AllOf,
                     allOfItem =>
                     {
-                        Assert.Collection(allOfItem.Properties, property =>
+                        Assert.Collection(allOfItem.GetReferencedSchema(document).Properties, property =>
                             {
                                 Assert.Equal("id", property.Key);
                                 Assert.Equal("integer", property.Value.Type);
@@ -898,7 +903,7 @@ public partial class OpenApiDocumentServiceTests : OpenApiDocumentServiceTestBas
                     },
                     allOfItem =>
                     {
-                        Assert.Collection(allOfItem.Properties, property =>
+                        Assert.Collection(allOfItem.GetReferencedSchema(document).Properties, property =>
                         {
                             Assert.Equal("formFile", property.Key);
                             Assert.Equal("string", property.Value.Type);
@@ -907,7 +912,7 @@ public partial class OpenApiDocumentServiceTests : OpenApiDocumentServiceTestBas
                     },
                     allOfItem =>
                     {
-                        Assert.Collection(allOfItem.Properties, property =>
+                        Assert.Collection(allOfItem.GetReferencedSchema(document).Properties, property =>
                         {
                             Assert.Equal("guid", property.Key);
                             Assert.Equal("string", property.Value.Type);
@@ -1004,9 +1009,10 @@ public partial class OpenApiDocumentServiceTests : OpenApiDocumentServiceTestBas
                 Assert.NotNull(operation.RequestBody.Content);
                 var content = Assert.Single(operation.RequestBody.Content);
                 Assert.Equal("application/octet-stream", content.Key);
-                Assert.NotNull(content.Value.Schema);
-                Assert.Equal("string", content.Value.Schema.Type);
-                Assert.Equal("binary", content.Value.Schema.Format);
+                var schema = content.Value.Schema.GetReferencedSchema(document);
+                Assert.NotNull(schema);
+                Assert.Equal("string", schema.Type);
+                Assert.Equal("binary", schema.Format);
             }
         });
     }

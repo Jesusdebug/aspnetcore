@@ -277,7 +277,6 @@ internal static class JsonObjectSchemaExtensions
                 {
                     continue;
                 }
-                // TODO: Use the actual reference ID instead of the empty string.
                 mappings[derivedType.TypeDiscriminator.ToString()!] = string.Empty;
             }
             schema[OpenApiSchemaKeywords.DiscriminatorKeyword] = polymorphismOptions.TypeDiscriminatorPropertyName;

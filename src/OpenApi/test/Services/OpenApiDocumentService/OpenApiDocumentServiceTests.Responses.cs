@@ -231,7 +231,7 @@ public partial class OpenApiDocumentServiceTests : OpenApiDocumentServiceTestBas
             Assert.Empty(response.Value.Description);
             var mediaTypeEntry = Assert.Single(response.Value.Content);
             Assert.Equal("application/json", mediaTypeEntry.Key);
-            var schema = mediaTypeEntry.Value.Schema;
+            var schema = mediaTypeEntry.Value.Schema.GetReferencedSchema(document);
             Assert.Equal("object", schema.Type);
             Assert.Collection(schema.Properties, property =>
             {
@@ -264,7 +264,9 @@ public partial class OpenApiDocumentServiceTests : OpenApiDocumentServiceTestBas
             Assert.NotNull(defaultResponse);
             Assert.Empty(defaultResponse.Description);
             var defaultContent = Assert.Single(defaultResponse.Content.Values);
-            Assert.Collection(defaultContent.Schema.Properties, property =>
+            var schema = defaultContent.Schema.GetReferencedSchema(document);
+            Assert.NotNull(schema);
+            Assert.Collection(schema.Properties, property =>
             {
                 Assert.Equal("code", property.Key);
                 Assert.Equal("integer", property.Value.Type);
@@ -279,9 +281,10 @@ public partial class OpenApiDocumentServiceTests : OpenApiDocumentServiceTestBas
             Assert.Equal("OK", okResponse.Description);
             var okContent = Assert.Single(okResponse.Content);
             Assert.Equal("application/json", okContent.Key);
-            var schema = okContent.Value.Schema;
-            Assert.Equal("object", schema.Type);
-            Assert.Collection(schema.Properties, property =>
+            var okSchema = okContent.Value.Schema.GetReferencedSchema(document);
+            Assert.NotNull(okSchema);
+            Assert.Equal("object", okSchema.Type);
+            Assert.Collection(okSchema.Properties, property =>
             {
                 Assert.Equal("id", property.Key);
                 Assert.Equal("integer", property.Value.Type);

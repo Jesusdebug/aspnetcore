@@ -13,7 +13,7 @@ internal sealed class DelegateOpenApiDocumentTransformer : IOpenApiDocumentTrans
     // OpenApiPaths, we can pre-allocate an array of these types and use a direct
     // lookup on the OpenApiPaths dictionary to avoid allocating an enumerator
     // over the KeyValuePairs in OpenApiPaths.
-    private static readonly OperationType[] _operationTypes = [
+    internal static readonly OperationType[] OperationTypesCache = [
         OperationType.Get,
         OperationType.Post,
         OperationType.Put,
@@ -23,6 +23,7 @@ internal sealed class DelegateOpenApiDocumentTransformer : IOpenApiDocumentTrans
         OperationType.Patch,
         OperationType.Trace
     ];
+
     private readonly Func<OpenApiDocument, OpenApiDocumentTransformerContext, CancellationToken, Task>? _documentTransformer;
     private readonly Func<OpenApiOperation, OpenApiOperationTransformerContext, CancellationToken, Task>? _operationTransformer;
 
@@ -48,9 +49,9 @@ internal sealed class DelegateOpenApiDocumentTransformer : IOpenApiDocumentTrans
             var documentService = context.ApplicationServices.GetRequiredKeyedService<OpenApiDocumentService>(context.DocumentName);
             foreach (var pathItem in document.Paths.Values)
             {
-                for (var i = 0; i < _operationTypes.Length; i++)
+                for (var i = 0; i < OperationTypesCache.Length; i++)
                 {
-                    var operationType = _operationTypes[i];
+                    var operationType = OperationTypesCache[i];
                     if (!pathItem.Operations.TryGetValue(operationType, out var operation))
                     {
                         continue;
